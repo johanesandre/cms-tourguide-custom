@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Angkasa Tour & Travel - Prototype & Visual CMS Editor</title>
-    <!-- Tailwind CSS -->
+    <title>Angkasa Tour & Travel - Public Site & Admin CMS Panel</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,11 +14,13 @@
                     colors: {
                         brand: {
                             navy: '#0b1d3a',
+                            navyLight: '#142a4d',
                             blue: '#0052cc',
                             sky: '#00b8d9',
                             gold: '#dfa212',
-                            goldhover: '#c88f0d',
-                            lightBg: '#f4f6f9'
+                            goldHover: '#c88f0d',
+                            accent: '#ff5630',
+                            bgLight: '#f4f6f9'
                         }
                     },
                     fontFamily: {
@@ -28,962 +30,941 @@
             }
         }
     </script>
-    <!-- FontAwesome Icons -->
+    <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font: Inter -->
+    <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Custom Style for Admin Mode Editable State -->
     <style>
         body { font-family: 'Inter', sans-serif; }
-        
-        /* Highlight styled when CMS Admin mode is active */
-        body.cms-active [contenteditable="true"] {
-            outline: 2px dashed #dfa212 !important;
-            outline-offset: 4px;
-            cursor: text;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-        body.cms-active [contenteditable="true"]:hover {
-            outline: 2px dashed #0052cc !important;
-            background-color: rgba(223, 162, 18, 0.08);
-        }
-        body.cms-active [contenteditable="true"]:focus {
-            outline: 2px solid #0052cc !important;
-            background-color: rgba(0, 82, 204, 0.1);
-        }
-        
-        /* Smooth transitions */
         .card-hover {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px -10px rgba(11, 29, 58, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px -8px rgba(11, 29, 58, 0.12);
         }
-
-        /* Glassmorphism elements */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        .glass-dark {
-            background: rgba(11, 29, 58, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #0052cc; border-radius: 4px; }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #0052cc; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #0b1d3a; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 antialiased selection:bg-brand-gold selection:text-brand-navy">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col selection:bg-brand-gold selection:text-brand-navy">
 
-    <!-- FLOATING CMS CONTROL TOOLBAR BAR -->
-    <div id="cms-toolbar" class="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
-        <!-- Expanded CMS Action Buttons -->
-        <div id="cms-actions" class="hidden flex flex-col gap-2 p-3 rounded-2xl glass-dark text-white shadow-2xl border border-brand-gold/30 transition-all duration-300 transform scale-95 origin-bottom-right">
-            <div class="text-xs font-bold uppercase tracking-wider text-brand-gold border-b border-gray-700 pb-2 mb-1 flex items-center justify-between">
-                <span><i class="fa-solid fa-sliders mr-1"></i> Visual CMS Panel</span>
-                <span class="text-[10px] bg-brand-gold text-brand-navy font-extrabold px-1.5 py-0.5 rounded">LIVE EDIT</span>
-            </div>
-            
-            <button onclick="openManagePackagesModal()" class="flex items-center gap-2 text-xs bg-brand-blue hover:bg-blue-600 px-3 py-2 rounded-lg transition font-medium text-left shadow">
-                <i class="fa-solid fa-boxes-stacked text-brand-gold"></i> Kelola Paket Tour
-            </button>
-            <button onclick="saveAllInlineEdits()" class="flex items-center gap-2 text-xs bg-emerald-600 hover:bg-emerald-700 px-3 py-2 rounded-lg transition font-medium text-left shadow">
-                <i class="fa-solid fa-floppy-disk"></i> Simpan Semua Perubahan
-            </button>
-            <button onclick="exportDataJSON()" class="flex items-center gap-2 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg transition font-medium text-left shadow">
-                <i class="fa-solid fa-file-export"></i> Export Config JSON
-            </button>
-            <label class="flex items-center gap-2 text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg transition font-medium text-left shadow cursor-pointer">
-                <i class="fa-solid fa-file-import"></i> Import Config JSON
-                <input type="file" id="import-json-file" accept=".json" onchange="importDataJSON(event)" class="hidden">
-            </label>
-            <button onclick="resetDefaultData()" class="flex items-center gap-2 text-xs bg-red-600/80 hover:bg-red-700 px-3 py-2 rounded-lg transition font-medium text-left shadow">
-                <i class="fa-solid fa-rotate-left"></i> Reset Data Original
-            </button>
+    <!-- GLOBAL APPS STATE NOTIFICATION BAR (LIVE VS ADMIN MODE) -->
+    <div id="top-system-bar" class="bg-brand-navy text-slate-300 text-xs py-1.5 px-4 border-b border-slate-800 flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 font-bold text-white">
+                <i class="fa-solid fa-plane-departure text-brand-gold"></i> ANGKASA TOUR & TRAVEL
+            </span>
+            <span id="current-view-badge" class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                ● PUBLIC VISITOR LIVE VIEW
+            </span>
         </div>
-
-        <!-- Toggle Switch Floating Button -->
-        <div class="flex items-center gap-3 bg-brand-navy text-white px-4 py-3 rounded-full shadow-2xl border-2 border-brand-gold">
-            <div class="flex flex-col text-right">
-                <span class="text-xs font-bold leading-none text-brand-gold" id="cms-status-label">CMS EDIT MODE: OFF</span>
-                <span class="text-[10px] text-gray-300">Klik switch untuk ubah teks langsung</span>
+        <div class="flex items-center gap-3">
+            <div id="logged-in-admin-indicator" class="hidden text-brand-gold text-[11px] font-medium flex items-center gap-1">
+                <i class="fa-solid fa-user-shield"></i> Terotentikasi sebagai <span class="font-bold underline">Administrator</span>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="cms-toggle-switch" class="sr-only peer" onchange="toggleCmsMode()">
-                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-gold"></div>
-            </label>
+            <button onclick="switchView('public')" id="btn-view-public" class="text-white hover:text-brand-gold font-semibold text-[11px] transition">
+                <i class="fa-solid fa-globe mr-1"></i> Public Web
+            </button>
+            <span class="text-slate-700">|</span>
+            <button onclick="handleAdminPanelClick()" id="btn-view-admin" class="text-brand-gold hover:text-yellow-300 font-bold text-[11px] transition">
+                <i class="fa-solid fa-lock mr-1"></i> Admin Panel CMS
+            </button>
         </div>
     </div>
 
-    <!-- TOP BAR INFO -->
-    <div class="bg-brand-navy text-gray-300 text-xs py-2 border-b border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center gap-4">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-phone text-brand-gold"></i> <span data-cms-key="topbar_phone">+62 61 455 1234 / +62 811 600 8888</span></span>
-                <span class="hidden md:flex items-center gap-1.5"><i class="fa-solid fa-envelope text-brand-gold"></i> <span data-cms-key="topbar_email">info@angkasatour.co.id</span></span>
-                <span class="hidden lg:flex items-center gap-1.5"><i class="fa-solid fa-clock text-brand-gold"></i> <span data-cms-key="topbar_hours">Mon-Sat: 08:30 - 18:00</span></span>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="flex gap-3">
-                    <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-facebook"></i></a>
-                    <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-whatsapp"></i></a>
+    <!-- ========================================================================= -->
+    <!-- VIEW SECTION 1: PUBLIC VISITOR WEBSITE                                   -->
+    <!-- ========================================================================= -->
+    <div id="view-public" class="flex-1 flex flex-col">
+        <!-- TOP INFO SUBBAR -->
+        <div class="bg-slate-900 text-slate-300 text-xs py-2 hidden sm:block border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <div class="flex items-center gap-6">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-phone text-brand-gold"></i> <span id="pub-phone">+62 61 455 1234 / +62 811 600 8888</span></span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-envelope text-brand-gold"></i> <span id="pub-email">info@angkasatour.co.id</span></span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-clock text-brand-gold"></i> Mon - Sat: 08:30 - 18:00</span>
                 </div>
-                <div class="border-l border-gray-700 pl-3 flex items-center gap-2">
-                    <i class="fa-solid fa-globe text-brand-gold"></i>
-                    <select class="bg-transparent text-white text-xs border-none focus:ring-0 cursor-pointer">
-                        <option class="bg-brand-navy">ID (Rp)</option>
-                        <option class="bg-brand-navy">EN ($)</option>
-                    </select>
+                <div class="flex items-center gap-4">
+                    <span class="text-slate-400">Ikuti Kami:</span>
+                    <div class="flex gap-2.5">
+                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- MAIN NAVIGATION BAR -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm transition-all duration-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <!-- Logo -->
-                <a href="#" class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-brand-navy rounded-xl flex items-center justify-center text-brand-gold font-black text-xl shadow-md border-b-2 border-brand-gold">
-                        <i class="fa-solid fa-plane-departure"></i>
-                    </div>
-                    <div>
-                        <div class="text-xl font-extrabold text-brand-navy tracking-tight uppercase leading-none">
-                            ANGKASA <span class="text-brand-gold">TOUR</span>
+        <!-- PUBLIC NAVIGATION HEADER -->
+        <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-20">
+                    <a href="#home" class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-brand-navy rounded-xl flex items-center justify-center text-brand-gold font-black text-xl shadow-md border-b-2 border-brand-gold">
+                            <i class="fa-solid fa-paper-plane"></i>
                         </div>
-                        <div class="text-[10px] text-gray-500 font-medium tracking-widest uppercase mt-0.5">
-                            & TRAVEL SERVICES
+                        <div>
+                            <div class="text-xl font-black text-brand-navy tracking-tight uppercase leading-none">
+                                ANGKASA <span class="text-brand-gold">TOUR</span>
+                            </div>
+                            <div class="text-[9px] text-slate-500 font-extrabold tracking-widest uppercase mt-0.5">
+                                TOUR & TRAVEL SERVICES
+                            </div>
                         </div>
-                    </div>
-                </a>
-
-                <!-- Desktop Navigation Links -->
-                <nav class="hidden lg:flex items-center gap-8 font-medium text-sm text-gray-700">
-                    <a href="#home" class="hover:text-brand-blue transition font-semibold text-brand-blue">Home</a>
-                    <a href="#destinations" class="hover:text-brand-blue transition">Destinasi</a>
-                    <a href="#packages" class="hover:text-brand-blue transition">Paket Tour</a>
-                    <a href="#services" class="hover:text-brand-blue transition">Visa & Layanan</a>
-                    <a href="#why-us" class="hover:text-brand-blue transition">Tentang Kami</a>
-                    <a href="#contact" class="hover:text-brand-blue transition">Kontak</a>
-                </nav>
-
-                <!-- Right Action Buttons -->
-                <div class="hidden sm:flex items-center gap-3">
-                    <a href="https://wa.me/628116008888?text=Halo%20Angkasa%20Tour,%20saya%20ingin%20tanya%20paket%20wisata" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-2 shadow-md transition transform hover:-translate-y-0.5">
-                        <i class="fa-brands fa-whatsapp text-base"></i>
-                        <span>Konsultasi Gratis</span>
                     </a>
-                </div>
 
-                <!-- Mobile menu toggle -->
-                <button onclick="toggleMobileMenu()" class="lg:hidden text-brand-navy p-2 rounded-lg focus:outline-none">
-                    <i class="fa-solid fa-bars text-2xl"></i>
-                </button>
-            </div>
-        </div>
+                    <!-- Nav Links -->
+                    <nav class="hidden md:flex items-center gap-8 font-semibold text-sm text-slate-700">
+                        <a href="#home" class="hover:text-brand-blue transition text-brand-blue font-bold">Home</a>
+                        <a href="#destinations" class="hover:text-brand-blue transition">Destinasi</a>
+                        <a href="#packages" class="hover:text-brand-blue transition">Paket Tour</a>
+                        <a href="#services" class="hover:text-brand-blue transition">Layanan & Visa</a>
+                        <a href="#testimonials" class="hover:text-brand-blue transition">Testimoni</a>
+                        <a href="#contact" class="hover:text-brand-blue transition">Kontak</a>
+                    </nav>
 
-        <!-- Mobile Drawer Menu -->
-        <div id="mobile-menu" class="hidden lg:hidden bg-white border-b border-gray-200 px-4 pt-2 pb-6 space-y-3">
-            <a href="#home" onclick="toggleMobileMenu()" class="block py-2 text-brand-blue font-semibold">Home</a>
-            <a href="#destinations" onclick="toggleMobileMenu()" class="block py-2 text-gray-700">Destinasi</a>
-            <a href="#packages" onclick="toggleMobileMenu()" class="block py-2 text-gray-700">Paket Tour</a>
-            <a href="#services" onclick="toggleMobileMenu()" class="block py-2 text-gray-700">Visa & Layanan</a>
-            <a href="#why-us" onclick="toggleMobileMenu()" class="block py-2 text-gray-700">Tentang Kami</a>
-            <a href="#contact" onclick="toggleMobileMenu()" class="block py-2 text-gray-700">Kontak</a>
-            <a href="https://wa.me/628116008888" target="_blank" class="block text-center bg-emerald-600 text-white py-2.5 rounded-xl font-semibold text-sm">
-                <i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp Angkasa Tour
-            </a>
-        </div>
-    </header>
+                    <div class="hidden lg:flex items-center gap-3">
+                        <button onclick="openBookingModal('Umum')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-md transition transform hover:-translate-y-0.5">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span>Konsultasi Tour</span>
+                        </button>
+                    </div>
 
-    <!-- HERO SECTION & BOOKING FILTER BAR -->
-    <section id="home" class="relative min-h-[580px] flex items-center justify-center bg-brand-navy py-16 overflow-hidden">
-        <!-- Dynamic Background Image with overlay -->
-        <div class="absolute inset-0 z-0">
-            <img id="hero-bg-img" src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1920&q=80" alt="Hero Background" class="w-full h-full object-cover opacity-35">
-            <div class="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/60 to-transparent"></div>
-        </div>
-
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-center">
-            <!-- Badge -->
-            <div class="inline-flex items-center gap-2 bg-brand-gold/20 border border-brand-gold/40 text-brand-gold px-4 py-1.5 rounded-full text-xs font-semibold mb-6">
-                <i class="fa-solid fa-star text-xs"></i>
-                <span data-cms-key="hero_badge">Official Travel Partner Angkasa Tour & Travel</span>
-            </div>
-
-            <!-- Editable Headline -->
-            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-4 leading-tight max-w-4xl mx-auto" data-cms-key="hero_title">
-                Jelajahi Keindahan Dunia Bersama Angkasa Tour
-            </h1>
-
-            <!-- Editable Subtitle -->
-            <p class="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto mb-10 font-normal" data-cms-key="hero_subtitle">
-                Layanan Paket Wisata Domestik & Internasional Terpercaya, Visa, Tiket Pesawat, serta Cruise dengan Pengalaman Lebih Dari 20 Tahun.
-            </p>
-
-            <!-- CMS Change Hero Image Quick Button (Visible in Admin Mode) -->
-            <div class="cms-only hidden mb-6">
-                <button onclick="promptHeroImageChange()" class="bg-brand-gold text-brand-navy font-bold px-4 py-2 rounded-xl text-xs hover:bg-yellow-400 transition shadow-lg">
-                    <i class="fa-solid fa-image mr-1"></i> Ganti Background Hero Banner
-                </button>
-            </div>
-
-            <!-- SEARCH FILTER TAB CONTAINER -->
-            <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-4 sm:p-6 text-left border border-gray-100">
-                <!-- Search Tabs -->
-                <div class="flex gap-2 border-b border-gray-200 pb-3 mb-4 overflow-x-auto">
-                    <button onclick="switchTab('tab-tour')" id="btn-tab-tour" class="search-tab-btn text-brand-blue border-b-2 border-brand-blue font-bold px-4 py-2 text-sm flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-route"></i> Tour Packages
-                    </button>
-                    <button onclick="switchTab('tab-flight')" id="btn-tab-flight" class="search-tab-btn text-gray-500 hover:text-brand-blue px-4 py-2 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-plane"></i> Tiket Pesawat
-                    </button>
-                    <button onclick="switchTab('tab-hotel')" id="btn-tab-hotel" class="search-tab-btn text-gray-500 hover:text-brand-blue px-4 py-2 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-hotel"></i> Hotel
-                    </button>
-                    <button onclick="switchTab('tab-visa')" id="btn-tab-visa" class="search-tab-btn text-gray-500 hover:text-brand-blue px-4 py-2 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-passport"></i> Layanan Visa
+                    <!-- Mobile Menu Btn -->
+                    <button onclick="toggleMobileNav()" class="md:hidden text-brand-navy p-2 rounded-lg">
+                        <i class="fa-solid fa-bars text-2xl"></i>
                     </button>
                 </div>
+            </div>
 
-                <!-- Form Content Tour -->
-                <div id="tab-tour" class="tab-content grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Destinasi Impian</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-location-dot absolute left-3 top-3 text-gray-400 text-sm"></i>
-                            <input type="text" id="search-destination" placeholder="Jepang, Korea, Eropa..." class="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            <!-- Mobile Dropdown -->
+            <div id="mobile-nav" class="hidden md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3 font-semibold text-sm">
+                <a href="#home" onclick="toggleMobileNav()" class="block py-2 text-brand-blue">Home</a>
+                <a href="#destinations" onclick="toggleMobileNav()" class="block py-2 text-slate-700">Destinasi</a>
+                <a href="#packages" onclick="toggleMobileNav()" class="block py-2 text-slate-700">Paket Tour</a>
+                <a href="#services" onclick="toggleMobileNav()" class="block py-2 text-slate-700">Layanan & Visa</a>
+                <a href="#testimonials" onclick="toggleMobileNav()" class="block py-2 text-slate-700">Testimoni</a>
+                <a href="#contact" onclick="toggleMobileNav()" class="block py-2 text-slate-700">Kontak</a>
+            </div>
+        </header>
+
+        <!-- HERO BANNER SECTION -->
+        <section id="home" class="relative min-h-[560px] flex items-center justify-center bg-brand-navy py-16 overflow-hidden">
+            <div class="absolute inset-0 z-0">
+                <img id="pub-hero-bg" src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1920&q=80" alt="Hero" class="w-full h-full object-cover opacity-30">
+                <div class="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/70 to-transparent"></div>
+            </div>
+
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-center">
+                <div class="inline-flex items-center gap-2 bg-brand-gold/20 border border-brand-gold/40 text-brand-gold px-4 py-1.5 rounded-full text-xs font-bold mb-6">
+                    <i class="fa-solid fa-star text-xs"></i>
+                    <span>Official Travel Partner Angkasa Tour</span>
+                </div>
+
+                <h1 id="pub-hero-title" class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mb-4 leading-tight max-w-4xl mx-auto">
+                    Jelajahi Keindahan Dunia Bersama Angkasa Tour
+                </h1>
+
+                <p id="pub-hero-subtitle" class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto mb-10 font-normal">
+                    Layanan Paket Wisata Domestik & Internasional Terpercaya, Visa, Tiket Pesawat, serta Cruise dengan Pengalaman Lebih Dari 20 Tahun.
+                </p>
+
+                <!-- Search Filter Box -->
+                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl p-4 sm:p-6 text-left border border-slate-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Destinasi / Kategori</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-location-dot absolute left-3 top-3 text-slate-400 text-sm"></i>
+                                <input type="text" id="public-search-dest" placeholder="Jepang, Korea, Europe..." class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Filter Kategori</label>
+                            <select id="public-filter-cat" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                                <option value="all">Semua Kategori</option>
+                                <option value="Promo">Promo Diskon</option>
+                                <option value="Japan">Jepang</option>
+                                <option value="Korea">Korea</option>
+                                <option value="Europe">Eropa</option>
+                                <option value="Domestic">Domestik / Bali</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button onclick="applyPublicFilter()" class="w-full bg-brand-gold hover:bg-brand-goldHover text-brand-navy font-extrabold py-2.5 px-4 rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass"></i> Cari Paket
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DESTINATIONS CATEGORIES GRID -->
+        <section id="destinations" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Bulan Keberangkatan</label>
-                        <select class="w-full py-2.5 px-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
-                            <option>Semua Bulan</option>
-                            <option>Oktober 2026</option>
-                            <option>November 2026</option>
-                            <option>Desember 2026 (Winter)</option>
-                            <option>Januari 2027</option>
-                        </select>
+                        <span class="text-brand-blue font-black text-xs tracking-widest uppercase">DESTINASI FAVORIT</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy mt-1">Eksplorasi Negara Impian Anda</h2>
+                    </div>
+                </div>
+
+                <div id="destinations-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <!-- Dynamic Destination cards rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TOUR PACKAGES PUBLIC GRID -->
+        <section id="packages" class="py-16 bg-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+                    <div>
+                        <span class="text-brand-blue font-black text-xs tracking-widest uppercase">PILIHAN POPULER</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy mt-1">Paket Tour & Liburan Terbaru</h2>
+                    </div>
+                    <div id="public-category-pills" class="flex flex-wrap gap-2">
+                        <button onclick="renderPublicPackages('all')" class="bg-brand-navy text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm">Semua</button>
+                        <button onclick="renderPublicPackages('Promo')" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200">Promo</button>
+                        <button onclick="renderPublicPackages('Japan')" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200">Jepang</button>
+                        <button onclick="renderPublicPackages('Korea')" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200">Korea</button>
+                        <button onclick="renderPublicPackages('Europe')" class="bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200">Eropa</button>
+                    </div>
+                </div>
+
+                <div id="public-packages-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Dynamic Package Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SERVICES -->
+        <section id="services" class="py-16 bg-white border-t border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="text-brand-blue font-black text-xs tracking-widest uppercase">LAYANAN KAMI</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy mt-1">Solusi Perjalanan Terpadu</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 card-hover">
+                        <div class="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center text-brand-blue text-2xl mb-4"><i class="fa-solid fa-passport"></i></div>
+                        <h3 class="font-bold text-lg text-brand-navy mb-2">Visa Kunjungan & Paspor</h3>
+                        <p class="text-slate-600 text-sm">Konsultasi dan pengurusan Visa Jepang, Schengen, USA, China, Australia, dan pembuatan Paspor garansi resmi.</p>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 card-hover">
+                        <div class="w-12 h-12 bg-brand-gold/20 rounded-xl flex items-center justify-center text-brand-gold text-2xl mb-4"><i class="fa-solid fa-ship"></i></div>
+                        <h3 class="font-bold text-lg text-brand-navy mb-2">Luxury Cruise Packages</h3>
+                        <p class="text-slate-600 text-sm">Pengalaman berlayar mewah bersama Genting Dream, Royal Caribbean, dan Costa Cruise dengan fasilitas bintang lima.</p>
+                    </div>
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 card-hover">
+                        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 text-2xl mb-4"><i class="fa-solid fa-plane-departure"></i></div>
+                        <h3 class="font-bold text-lg text-brand-navy mb-2">Tiket Pesawat Group & Corporate</h3>
+                        <p class="text-slate-600 text-sm">Pemesanan tiket penerbangan domestik dan internasional harga grup khusus corporate/insentif.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS -->
+        <section id="testimonials" class="py-16 bg-brand-navy text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="text-brand-gold font-black text-xs tracking-widest uppercase">TESTIMONI PELANGGAN</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold mt-1">Apa Kata Wisatawan Kami?</h2>
+                </div>
+
+                <div id="public-testimonials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic Testimonial Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- PUBLIC FOOTER -->
+        <footer id="contact" class="bg-slate-950 text-slate-400 text-sm pt-16 pb-12 border-t border-slate-800 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-brand-navy rounded-lg flex items-center justify-center text-brand-gold font-black text-base border border-brand-gold">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </div>
+                            <span class="text-lg font-bold text-white tracking-tight uppercase">ANGKASA <span class="text-brand-gold">TOUR</span></span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            PT. Angkasa Tour & Travel Services - Solusi lengkap perjalanan wisata, bisnis, tiket pesawat, pameran internasional, dan insentif perusahaan.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider border-l-2 border-brand-gold pl-2">Alamat Kantor</h4>
+                        <ul class="space-y-2 text-xs">
+                            <li class="font-semibold text-white">Medan (Head Office):</li>
+                            <li id="pub-addr-medan">Jl. Brigjen Katamso No. 123, Medan, Sumatera Utara</li>
+                            <li class="font-semibold text-white mt-2">Jakarta:</li>
+                            <li id="pub-addr-jkt">Ruko Mangga Dua Square, Jakarta Utara</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider border-l-2 border-brand-gold pl-2">Quick Links</h4>
+                        <ul class="space-y-2 text-xs">
+                            <li><a href="#home" class="hover:text-white transition">Home</a></li>
+                            <li><a href="#packages" class="hover:text-white transition">Paket Tour Terbaru</a></li>
+                            <li><a href="#services" class="hover:text-white transition">Layanan Visa Online</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider border-l-2 border-brand-gold pl-2">Kontak Kami</h4>
+                        <ul class="space-y-2 text-xs">
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-phone text-brand-gold"></i> <span id="pub-footer-phone">+62 61 455 1234</span></li>
+                            <li class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500"></i> <span id="pub-footer-wa">+62 811 600 8888</span></li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-envelope text-brand-gold"></i> <span id="pub-footer-email">sales@angkasatour.co.id</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-6 text-center text-xs text-slate-500">
+                    © 2026 Angkasa Tour & Travel. Public Live Web Prototype.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- VIEW SECTION 2: PROTECTED ADMIN CMS PANEL DASHBOARD                      -->
+    <!-- ========================================================================= -->
+    <div id="view-admin" class="hidden flex-1 bg-slate-900 text-slate-100 flex flex-col md:flex-row min-h-[calc(100vh-35px)]">
+        
+        <!-- SIDEBAR ADMIN NAV -->
+        <aside class="w-full md:w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 bg-brand-gold text-brand-navy rounded-lg flex items-center justify-center font-black">
+                        <i class="fa-solid fa-sliders"></i>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Kategori Tour</label>
-                        <select class="w-full py-2.5 px-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue">
-                            <option>Semua Kategori</option>
-                            <option>Group Series</option>
-                            <option>Private Tour</option>
-                            <option>Cruises & Luxury</option>
-                        </select>
+                        <h2 class="font-bold text-sm text-white leading-none">CMS CONTROL</h2>
+                        <span class="text-[10px] text-slate-400 font-mono">v2.4 - Protected</span>
                     </div>
-                    <div>
-                        <button onclick="filterPackages()" class="w-full bg-brand-gold hover:bg-brand-goldhover text-brand-navy font-extrabold py-2.5 px-4 rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-magnifying-glass"></i> Cari Tour
+                </div>
+            </div>
+
+            <!-- Admin Nav Links -->
+            <nav class="p-3 space-y-1 text-xs font-medium flex-1">
+                <button onclick="switchAdminTab('tab-dashboard')" id="adm-nav-dashboard" class="adm-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-brand-gold bg-brand-navy font-bold transition">
+                    <i class="fa-solid fa-chart-line w-4 text-center"></i> Dashboard Overview
+                </button>
+                <button onclick="switchAdminTab('tab-packages')" id="adm-nav-packages" class="adm-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+                    <i class="fa-solid fa-boxes-stacked w-4 text-center"></i> Kelola Paket Tour
+                </button>
+                <button onclick="switchAdminTab('tab-content')" id="adm-nav-content" class="adm-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+                    <i class="fa-solid fa-heading w-4 text-center"></i> Hero & Konten Web
+                </button>
+                <button onclick="switchAdminTab('tab-destinations')" id="adm-nav-destinations" class="adm-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+                    <i class="fa-solid fa-earth-americas w-4 text-center"></i> Destinasi Favorit
+                </button>
+                <button onclick="switchAdminTab('tab-testimonials')" id="adm-nav-testimonials" class="adm-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition">
+                    <i class="fa-solid fa-comments w-4 text-center"></i> Testimoni Wisatawan
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-slate-800 space-y-2">
+                <button onclick="switchView('public')" class="w-full bg-brand-blue hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-eye"></i> Preview Live Web
+                </button>
+                <button onclick="logoutAdmin()" class="w-full bg-slate-800 hover:bg-red-900/40 text-red-400 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout Admin
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN ADMIN DASHBOARD BODY CONTENT -->
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl">
+            
+            <!-- TAB 1: DASHBOARD OVERVIEW -->
+            <div id="tab-dashboard" class="adm-tab-content space-y-6">
+                <div>
+                    <h1 class="text-2xl font-black text-white">Dashboard Overview</h1>
+                    <p class="text-slate-400 text-xs mt-1">Ringkasan status CMS dan statistik paket liburan terpublikasi.</p>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                        <div>
+                            <span class="text-slate-400 text-xs font-semibold">Total Paket Tour</span>
+                            <div id="stat-total-pkg" class="text-2xl font-black text-white mt-1">0</div>
+                        </div>
+                        <div class="w-12 h-12 bg-brand-blue/20 text-brand-blue rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-suitcase"></i></div>
+                    </div>
+                    <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                        <div>
+                            <span class="text-slate-400 text-xs font-semibold">Paket Status Active</span>
+                            <div id="stat-active-pkg" class="text-2xl font-black text-emerald-400 mt-1">0</div>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-circle-check"></i></div>
+                    </div>
+                    <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                        <div>
+                            <span class="text-slate-400 text-xs font-semibold">Kategori Destinasi</span>
+                            <div id="stat-dest-count" class="text-2xl font-black text-brand-gold mt-1">0</div>
+                        </div>
+                        <div class="w-12 h-12 bg-brand-gold/20 text-brand-gold rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-map-location-dot"></i></div>
+                    </div>
+                    <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                        <div>
+                            <span class="text-slate-400 text-xs font-semibold">Simulasi Bookings</span>
+                            <div class="text-2xl font-black text-sky-400 mt-1">24 Inquiries</div>
+                        </div>
+                        <div class="w-12 h-12 bg-sky-500/20 text-sky-400 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-headset"></i></div>
+                    </div>
+                </div>
+
+                <!-- Backup & Quick Tools -->
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/60 space-y-4">
+                    <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                        <i class="fa-solid fa-database text-brand-gold"></i> Database & Backup Tools
+                    </h3>
+                    <div class="flex flex-wrap gap-3 text-xs">
+                        <button onclick="exportDataJSON()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 px-4 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Export Data Backup (JSON)
+                        </button>
+                        <label class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 px-4 rounded-xl transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> Import Data Backup (JSON)
+                            <input type="file" id="import-json-file" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                        </label>
+                        <button onclick="resetDefaultData()" class="bg-red-900/60 hover:bg-red-800 text-red-200 font-bold py-2.5 px-4 rounded-xl transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Reset System Data Original
                         </button>
                     </div>
                 </div>
-
-                <!-- Tab Flight (Placeholder Interface) -->
-                <div id="tab-flight" class="tab-content hidden grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Kota Asal</label>
-                        <input type="text" placeholder="Medan (KNO) / Jakarta (CGK)" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Kota Tujuan</label>
-                        <input type="text" placeholder="Tokyo (HND) / Singapore (SIN)" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
-                    </div>
-                    <div>
-                        <a href="https://wa.me/628116008888?text=Halo%20Angkasa%20Tour,%20saya%20mau%20pesan%20tiket%20pesawat" target="_blank" class="w-full bg-brand-blue text-white font-bold py-2.5 px-4 rounded-xl text-sm block text-center">
-                            Request Tiket via WA
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Tab Hotel (Placeholder) -->
-                <div id="tab-hotel" class="tab-content hidden text-center py-4 text-gray-500 text-sm">
-                    Layanan pemesanan Hotel Domestik & Internasional rate korporat khusus Angkasa Tour. <a href="https://wa.me/628116008888" class="text-brand-blue font-bold underline">Hubungi Tim Resepsionis</a>
-                </div>
-
-                <!-- Tab Visa (Placeholder) -->
-                <div id="tab-visa" class="tab-content hidden text-center py-4 text-gray-500 text-sm">
-                    Konsultasi & Pengurusan Visa Jepang, Schengen, China, USA, Australia cepat dan garansi dokumen aman.
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- POPULAR DESTINATIONS GRID -->
-    <section id="destinations" class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-end justify-between mb-10">
-                <div>
-                    <span class="text-brand-blue font-extrabold text-xs tracking-widest uppercase" data-cms-key="dest_subtitle">DESTINASI FAVORIT</span>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy mt-1" data-cms-key="dest_title">Jelajahi Destinasi Populer Dunia</h2>
-                </div>
-                <p class="text-gray-500 text-sm max-w-md mt-2 md:mt-0" data-cms-key="dest_desc">
-                    Pilihan negara paling favorit impian wisatawan Indonesia dengan pemandu berpengalaman.
-                </p>
             </div>
 
-            <!-- Grid Categories -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                <!-- Japan -->
-                <div onclick="filterByDestination('Japan')" class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-56">
-                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=500&q=80" alt="Japan" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 class="font-bold text-base leading-tight">Jepang</h3>
-                        <p class="text-[11px] text-gray-300 mt-0.5">Cherry Blossom & Snow</p>
+            <!-- TAB 2: MANAGE PACKAGES -->
+            <div id="tab-packages" class="adm-tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-black text-white">Manajemen Paket Tour</h1>
+                        <p class="text-slate-400 text-xs mt-1">Tambah, perbarui harga, atau ubah status paket wisata.</p>
                     </div>
-                </div>
-
-                <!-- Korea -->
-                <div onclick="filterByDestination('Korea')" class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-56">
-                    <img src="https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=500&q=80" alt="Korea" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 class="font-bold text-base leading-tight">Korea Selatan</h3>
-                        <p class="text-[11px] text-gray-300 mt-0.5">Seoul & Nami Island</p>
-                    </div>
-                </div>
-
-                <!-- Europe -->
-                <div onclick="filterByDestination('Europe')" class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-56">
-                    <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=500&q=80" alt="Europe" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 class="font-bold text-base leading-tight">Eropa</h3>
-                        <p class="text-[11px] text-gray-300 mt-0.5">Paris, Swiss, Italia</p>
-                    </div>
-                </div>
-
-                <!-- China -->
-                <div onclick="filterByDestination('China')" class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-56">
-                    <img src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=500&q=80" alt="China" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 class="font-bold text-base leading-tight">China</h3>
-                        <p class="text-[11px] text-gray-300 mt-0.5">Great Wall & Zhangjiajie</p>
-                    </div>
-                </div>
-
-                <!-- Vietnam -->
-                <div onclick="filterByDestination('Vietnam')" class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-56">
-                    <img src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=500&q=80" alt="Vietnam" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 class="font-bold text-base leading-tight">Vietnam</h3>
-                        <p class="text-[11px] text-gray-300 mt-0.5">Hanoi & Bana Hills</p>
-                    </div>
-                </div>
-
-                <!-- Bali / Domestic -->
-                <div onclick="filterByDestination('Bali')" class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-56">
-                    <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=500&q=80" alt="Bali" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
-                        <h3 class="font-bold text-base leading-tight">Bali & Domestik</h3>
-                        <p class="text-[11px] text-gray-300 mt-0.5">Eksotis Nusantara</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- TOUR PACKAGES DYNAMIC SECTION -->
-    <section id="packages" class="py-16 bg-brand-lightBg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
-                <div>
-                    <span class="text-brand-blue font-extrabold text-xs tracking-widest uppercase" data-cms-key="pkg_subtitle">PILIHAN TERPOPULER</span>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy mt-1" data-cms-key="pkg_title">Paket Tour & Liburan Pilihan</h2>
-                </div>
-
-                <!-- Package Category Filters & Add Button -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="renderPackages('all')" class="bg-brand-navy text-white text-xs font-semibold px-4 py-2 rounded-xl">Semua Paket</button>
-                    <button onclick="renderPackages('Promo')" class="bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-200">Promo Diskon</button>
-                    <button onclick="renderPackages('International')" class="bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold px-4 py-2 rounded-xl border border-gray-200">Internasional</button>
-                    
-                    <!-- Quick Add Package Button (CMS) -->
-                    <button onclick="openManagePackagesModal()" class="cms-only hidden bg-brand-gold hover:bg-brand-goldhover text-brand-navy font-bold text-xs px-3 py-2 rounded-xl shadow border border-brand-gold">
-                        <i class="fa-solid fa-plus mr-1"></i> Add New Package
+                    <button onclick="openPackageFormModal()" class="bg-brand-gold hover:bg-yellow-400 text-brand-navy font-black text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Tambah Paket Baru
                     </button>
                 </div>
-            </div>
 
-            <!-- Dynamic Package Cards Container -->
-            <div id="tour-packages-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- JS will render dynamic packages here from localStorage/default state -->
-            </div>
-        </div>
-    </section>
-
-    <!-- SERVICES HIGHLIGHTS -->
-    <section id="services" class="py-16 bg-white border-t border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-12">
-                <span class="text-brand-blue font-extrabold text-xs tracking-widest uppercase" data-cms-key="srv_subtitle">ONE STOP TRAVEL SOLUTION</span>
-                <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-navy mt-1" data-cms-key="srv_title">Layanan Komprehensif Angkasa Tour</h2>
-                <p class="text-gray-500 text-sm mt-2" data-cms-key="srv_desc">Kami menyediakan seluruh kebutuhan perjalanan bisnis maupun liburan Anda secara profesional.</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Service Item 1 -->
-                <div class="p-6 bg-brand-lightBg rounded-2xl border border-gray-100 card-hover">
-                    <div class="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center text-brand-blue text-2xl mb-4">
-                        <i class="fa-solid fa-passport"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-brand-navy mb-2" data-cms-key="srv_1_title">Pengurusan Visa & Paspor</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed" data-cms-key="srv_1_desc">
-                        Layanan konsultasi dan pendampingan pembuatan Visa kunjungan, bisnis, dan liburan ke berbagai negara dengan proses cepat.
-                    </p>
-                </div>
-
-                <!-- Service Item 2 -->
-                <div class="p-6 bg-brand-lightBg rounded-2xl border border-gray-100 card-hover">
-                    <div class="w-12 h-12 bg-brand-gold/20 rounded-xl flex items-center justify-center text-brand-gold text-2xl mb-4">
-                        <i class="fa-solid fa-ship"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-brand-navy mb-2" data-cms-key="srv_2_title">Luxury Cruise Packages</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed" data-cms-key="srv_2_desc">
-                        Pengalaman berlayar kapal pesiar mewah seperti Royal Caribbean, Resort World Cruises, dan Costa Cruise.
-                    </p>
-                </div>
-
-                <!-- Service Item 3 -->
-                <div class="p-6 bg-brand-lightBg rounded-2xl border border-gray-100 card-hover">
-                    <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 text-2xl mb-4">
-                        <i class="fa-solid fa-plane-departure"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-brand-navy mb-2" data-cms-key="srv_3_title">Tiket Pesawat Domestik & Int</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed" data-cms-key="srv_3_desc">
-                        Pemesanan tiket penerbangan domestik dan internasional dengan harga bersaing serta kemudahan reschedule.
-                    </p>
-                </div>
-
-                <!-- Service Item 4 -->
-                <div class="p-6 bg-brand-lightBg rounded-2xl border border-gray-100 card-hover">
-                    <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-600 text-2xl mb-4">
-                        <i class="fa-solid fa-wifi"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-brand-navy mb-2" data-cms-key="srv_4_title">Travel eSIM & Roaming</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed" data-cms-key="srv_4_desc">
-                        Koneksi internet tanpa batas selama berlibur di luar negeri dengan eSIM dan Pocket WiFi terpercaya.
-                    </p>
-                </div>
-
-                <!-- Service Item 5 -->
-                <div class="p-6 bg-brand-lightBg rounded-2xl border border-gray-100 card-hover">
-                    <div class="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 text-2xl mb-4">
-                        <i class="fa-solid fa-car"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-brand-navy mb-2" data-cms-key="srv_5_title">Sewa Bus & Private Car</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed" data-cms-key="srv_5_desc">
-                        Sewa kendaraan private atau bus pariwisata untuk group corporate tour lengkap dengan pengemudi lokal berpengalaman.
-                    </p>
-                </div>
-
-                <!-- Service Item 6 -->
-                <div class="p-6 bg-brand-lightBg rounded-2xl border border-gray-100 card-hover">
-                    <div class="w-12 h-12 bg-rose-500/10 rounded-xl flex items-center justify-center text-rose-600 text-2xl mb-4">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-brand-navy mb-2" data-cms-key="srv_6_title">Asuransi Perjalanan</h3>
-                    <p class="text-gray-600 text-sm leading-relaxed" data-cms-key="srv_6_desc">
-                        Perlindungan komprehensif perjalanan Anda mencakup keterlambatan penerbangan, bagasi, hingga perlindungan medis.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- WHY CHOOSE US & TESTIMONIALS -->
-    <section id="why-us" class="py-16 bg-brand-navy text-white relative overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <span class="text-brand-gold font-extrabold text-xs tracking-widest uppercase" data-cms-key="why_subtitle">MENGAPA ANGKASA TOUR</span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold mt-2 mb-6 leading-tight" data-cms-key="why_title">
-                        Pengalaman Tour Berkualitas Tanpa Rasa Khawatir
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 bg-brand-gold text-brand-navy font-bold rounded-xl flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-award"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-base text-white" data-cms-key="why_1_title">Agen Resmi & Terlisensi</h3>
-                                <p class="text-gray-300 text-sm mt-1" data-cms-key="why_1_desc">Memiliki lisensi resmi ASITA & IATA dengan ribuan testimoni pelanggan puas.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 bg-brand-gold text-brand-navy font-bold rounded-xl flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-user-shield"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-base text-white" data-cms-key="why_2_title">Tour Leader Berpengalaman</h3>
-                                <p class="text-gray-300 text-sm mt-1" data-cms-key="why_2_desc">Didampingi Tour Leader profesional dari Indonesia yang ramah & menguasai destinasi.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 bg-brand-gold text-brand-navy font-bold rounded-xl flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-hand-holding-dollar"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-base text-white" data-cms-key="why_3_title">Harga Transparan & Best Value</h3>
-                                <p class="text-gray-300 text-sm mt-1" data-cms-key="why_3_desc">Tidak ada biaya tersembunyi, jaminan hotel berbintang dan makanan halal/berkualitas.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Testimonial Box Container -->
-                <div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 relative">
-                    <i class="fa-solid fa-quote-right text-6xl text-brand-gold/20 absolute top-6 right-6"></i>
-                    <div class="flex items-center gap-1 text-brand-gold mb-4">
-                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                    </div>
-                    <p class="text-gray-200 italic text-base leading-relaxed mb-6" data-cms-key="testi_quote">
-                        "Liburan keluarga ke Jepang bersama Angkasa Tour luar biasa menyenangkan! Tour Leader sangat perhatian, jadwal tidak terburu-buru, hotel sangat bersih & dekat stasiun. Pasti akan booking tour lagi tahun depan."
-                    </p>
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-brand-gold text-brand-navy font-bold flex items-center justify-center text-lg">
-                            BS
-                        </div>
-                        <div>
-                            <div class="font-bold text-white" data-cms-key="testi_author">Bpk. Hendra S. & Keluarga</div>
-                            <div class="text-xs text-brand-gold" data-cms-key="testi_role">Peserta Tour Autumn Japan 2025</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FOOTER SECTION -->
-    <footer id="contact" class="bg-slate-950 text-gray-400 text-sm pt-16 pb-12 border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-                <!-- Col 1: Brand Info -->
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-brand-navy rounded-lg flex items-center justify-center text-brand-gold font-black text-base border border-brand-gold">
-                            <i class="fa-solid fa-plane-departure"></i>
-                        </div>
-                        <span class="text-lg font-bold text-white tracking-tight uppercase">ANGKASA <span class="text-brand-gold">TOUR</span></span>
-                    </div>
-                    <p class="text-xs text-gray-400 leading-relaxed" data-cms-key="footer_about">
-                        PT. Angkasa Tour & Travel Services - Solusi lengkap perjalanan wisata, bisnis, tiket pesawat, pameran internasional, dan insentif perusahaan.
-                    </p>
-                    <div class="flex gap-3 text-lg text-gray-300">
-                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-facebook"></i></a>
-                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-tiktok"></i></a>
-                        <a href="#" class="hover:text-brand-gold transition"><i class="fa-brands fa-youtube"></i></a>
-                    </div>
-                </div>
-
-                <!-- Col 2: Office Locations -->
-                <div>
-                    <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider border-l-2 border-brand-gold pl-2">Kantor Cabang</h4>
-                    <ul class="space-y-2 text-xs">
-                        <li class="font-semibold text-white">Medan (Head Office):</li>
-                        <li data-cms-key="footer_addr_medan">Jl. Brigjen Katamso No. 123, Medan, Sumatera Utara</li>
-                        <li class="font-semibold text-white mt-2">Jakarta:</li>
-                        <li data-cms-key="footer_addr_jkt">Ruko Mangga Dua Square, Jakarta Utara</li>
-                    </ul>
-                </div>
-
-                <!-- Col 3: Quick Links -->
-                <div>
-                    <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider border-l-2 border-brand-gold pl-2">Navigasi Cepat</h4>
-                    <ul class="space-y-2 text-xs">
-                        <li><a href="#home" class="hover:text-white transition">Home</a></li>
-                        <li><a href="#packages" class="hover:text-white transition">Paket Tour Terbaru</a></li>
-                        <li><a href="#services" class="hover:text-white transition">Pengurusan Visa Online</a></li>
-                        <li><a href="#why-us" class="hover:text-white transition">Syarat & Ketentuan Booking</a></li>
-                        <li><a href="#contact" class="hover:text-white transition">Hubungi Customer Service</a></li>
-                    </ul>
-                </div>
-
-                <!-- Col 4: Contact & Hours -->
-                <div>
-                    <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider border-l-2 border-brand-gold pl-2">Layanan Pelanggan</h4>
-                    <ul class="space-y-2 text-xs">
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-phone text-brand-gold"></i> <span data-cms-key="footer_phone">+62 61 455 1234</span></li>
-                        <li class="flex items-center gap-2"><i class="fa-brands fa-whatsapp text-emerald-500"></i> <span data-cms-key="footer_wa">+62 811 600 8888</span></li>
-                        <li class="flex items-center gap-2"><i class="fa-solid fa-envelope text-brand-gold"></i> <span data-cms-key="footer_email">sales@angkasatour.co.id</span></li>
-                        <li class="mt-3 text-[11px] text-gray-500">Jam Operasional Kantor:<br>Senin - Sabtu: 08:30 - 18:00 WIB</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="border-t border-slate-800 pt-6 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 gap-4">
-                <div>
-                    © 2026 Angkasa Tour & Travel Services. Prototype Built with Visual CMS Editor.
-                </div>
-                <div class="flex gap-4">
-                    <a href="#" class="hover:text-gray-400">Privacy Policy</a>
-                    <a href="#" class="hover:text-gray-400">Terms of Service</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- CMS PACKAGE MANAGEMENT MODAL -->
-    <div id="modal-manage-packages" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Modal Header -->
-            <div class="bg-brand-navy text-white px-6 py-4 flex justify-between items-center border-b border-brand-gold">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-boxes-stacked text-brand-gold"></i>
-                    <h3 class="font-bold text-base">CMS - Kelola Data Paket Tour</h3>
-                </div>
-                <button onclick="closeManagePackagesModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
-            </div>
-
-            <!-- Modal Body (Tabs: List / Add Form) -->
-            <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                <!-- Add New Package Form -->
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <h4 class="font-bold text-sm text-brand-navy mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-plus-circle text-brand-gold"></i> Tambah / Update Paket Baru
-                    </h4>
-                    <form id="pkg-form" onsubmit="handleSavePackageForm(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <input type="hidden" id="pkg-id">
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Judul Paket Tour</label>
-                            <input type="text" id="pkg-title" placeholder="Misal: Winter Hokkaido Symphony" required class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Destinasi / Tag Negara</label>
-                            <input type="text" id="pkg-dest" placeholder="Japan / Korea / Europe / Bali" required class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Harga Normal (Rp)</label>
-                            <input type="text" id="pkg-price-normal" placeholder="18.500.000" required class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Harga Promo / Final (Rp)</label>
-                            <input type="text" id="pkg-price-promo" placeholder="15.990.000" class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Durasi Hari</label>
-                            <input type="text" id="pkg-duration" placeholder="7D / 6N" required class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Tanggal Keberangkatan</label>
-                            <input type="text" id="pkg-date" placeholder="15, 22 Des 2026" required class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block font-semibold text-gray-700 mb-1">URL Gambar (Image Link)</label>
-                            <input type="url" id="pkg-img" placeholder="https://images.unsplash.com/..." required class="w-full p-2 border rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Badge Highlight</label>
-                            <select id="pkg-badge" class="w-full p-2 border rounded-lg">
-                                <option value="PROMO BEST SELLER">PROMO BEST SELLER</option>
-                                <option value="EARLY BIRD">EARLY BIRD</option>
-                                <option value="SPECIAL WINTER">SPECIAL WINTER</option>
-                                <option value="CHERRY BLOSSOM">CHERRY BLOSSOM</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit" class="w-full bg-brand-blue hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                                <i class="fa-solid fa-save mr-1"></i> Simpan Paket
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Existing Packages Table -->
-                <div>
-                    <h4 class="font-bold text-sm text-brand-navy mb-3">Daftar Paket Aktif</h4>
-                    <div class="overflow-x-auto border rounded-xl">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-100 border-b">
+                <div class="bg-slate-800/80 rounded-2xl border border-slate-700/60 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900 text-slate-400 uppercase font-bold text-[10px] tracking-wider border-b border-slate-700">
                                 <tr>
-                                    <th class="p-2.5">Gambar</th>
-                                    <th class="p-2.5">Judul Paket</th>
-                                    <th class="p-2.5">Harga Promo</th>
-                                    <th class="p-2.5">Destinasi</th>
-                                    <th class="p-2.5 text-right">Aksi</th>
+                                    <th class="p-3.5">Gambar</th>
+                                    <th class="p-3.5">Judul Paket</th>
+                                    <th class="p-3.5">Kategori / Tag</th>
+                                    <th class="p-3.5">Harga Normal</th>
+                                    <th class="p-3.5">Harga Promo</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5 text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="cms-packages-table-body">
-                                <!-- Rendered dynamically -->
+                            <tbody id="adm-packages-table" class="divide-y divide-slate-700/50">
+                                <!-- Dynamic rows -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- BOOKING DETAILS MODAL (PUBLIC VIEW) -->
-    <div id="modal-package-detail" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative">
-            <button onclick="closePackageDetailModal()" class="absolute top-3 right-3 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-black text-sm z-10">&times;</button>
-            <div class="h-48 relative">
-                <img id="detail-img" src="" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                <div class="absolute bottom-3 left-4 right-4 text-white">
-                    <span id="detail-badge" class="bg-brand-gold text-brand-navy font-extrabold text-[10px] px-2 py-0.5 rounded"></span>
-                    <h3 id="detail-title" class="font-extrabold text-lg mt-1"></h3>
+            <!-- TAB 3: MANAGE HERO & CONTENT -->
+            <div id="tab-content" class="adm-tab-content hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-black text-white">Kelola Content & Banner Website</h1>
+                    <p class="text-slate-400 text-xs mt-1">Ubah teks utama banner hero, nomor WhatsApp, dan alamat cabang.</p>
                 </div>
+
+                <form onsubmit="saveSiteContentForm(event)" class="bg-slate-800/80 p-6 rounded-2xl border border-slate-700/60 space-y-4 text-xs">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-300 mb-1">Hero Banner Title</label>
+                            <input type="text" id="adm-form-hero-title" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-300 mb-1">Hero Banner Subtitle</label>
+                            <textarea id="adm-form-hero-subtitle" rows="2" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-slate-300 mb-1">URL Image Hero Background Banner</label>
+                            <input type="text" id="adm-form-hero-bg" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">No. WhatsApp Hotline</label>
+                            <input type="text" id="adm-form-phone-wa" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">Email Reseller / Sales</label>
+                            <input type="text" id="adm-form-email" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">Alamat Kantor Medan</label>
+                            <input type="text" id="adm-form-addr-medan" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-300 mb-1">Alamat Kantor Jakarta</label>
+                            <input type="text" id="adm-form-addr-jkt" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-brand-gold hover:bg-yellow-400 text-brand-navy font-extrabold px-6 py-2.5 rounded-xl shadow transition">
+                        <i class="fa-solid fa-save mr-1"></i> Simpan Konten
+                    </button>
+                </form>
             </div>
-            <div class="p-5 space-y-4 text-sm">
-                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+
+            <!-- TAB 4: MANAGE DESTINATIONS -->
+            <div id="tab-destinations" class="adm-tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
                     <div>
-                        <div class="text-xs text-gray-500">Harga per Pax:</div>
-                        <div id="detail-price" class="text-xl font-extrabold text-brand-blue"></div>
-                    </div>
-                    <div class="text-right text-xs text-gray-600">
-                        <div><i class="fa-solid fa-clock text-brand-gold"></i> <span id="detail-duration"></span></div>
-                        <div class="mt-0.5"><i class="fa-solid fa-calendar text-brand-gold"></i> <span id="detail-date"></span></div>
+                        <h1 class="text-2xl font-black text-white">Kelola Destinasi Favorit</h1>
+                        <p class="text-slate-400 text-xs mt-1">Atur kategori negara dan gambar sampul utama.</p>
                     </div>
                 </div>
 
-                <div class="space-y-2 text-xs text-gray-600">
-                    <div class="font-bold text-gray-800">Fasilitas Termasuk:</div>
-                    <ul class="list-disc pl-4 space-y-1">
-                        <li>Tiket Pesawat Pulang Pergi (PP)</li>
-                        <li>Akomodasi Hotel Berbintang</li>
-                        <li>Makan Pagi, Siang, & Malam sesuai Itinerary</li>
-                        <li>Transportasi Bus Pariwisata & Tour Leader dari Indonesia</li>
-                    </ul>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="adm-destinations-list">
+                    <!-- Dynamic destination editing cards -->
                 </div>
-
-                <!-- WhatsApp Quick Form Link -->
-                <a id="detail-wa-btn" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-4 rounded-xl text-center flex items-center justify-center gap-2 shadow-lg transition">
-                    <i class="fa-brands fa-whatsapp text-lg"></i>
-                    <span>Pesan via WhatsApp Sekarang</span>
-                </a>
             </div>
+
+            <!-- TAB 5: MANAGE TESTIMONIALS -->
+            <div id="tab-testimonials" class="adm-tab-content hidden space-y-6">
+                <div>
+                    <h1 class="text-2xl font-black text-white">Kelola Testimoni Wisatawan</h1>
+                    <p class="text-slate-400 text-xs mt-1">Ubah kata testimoni dan nama pelanggan.</p>
+                </div>
+                <div id="adm-testimonials-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic testimonial cards -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODALS & DIALOGS                                                          -->
+    <!-- ========================================================================= -->
+
+    <!-- 1. ADMIN AUTHENTICATION LOGIN MODAL -->
+    <div id="modal-admin-login" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl text-white relative">
+            <button onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">&times;</button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-brand-navy border border-brand-gold text-brand-gold rounded-xl flex items-center justify-center text-xl font-extrabold mx-auto mb-3">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-lg font-black text-white">Admin CMS Login</h3>
+                <p class="text-slate-400 text-xs mt-1">Masukan kredensial terbatas untuk mengelola situs.</p>
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Username Admin</label>
+                    <input type="text" id="login-username" value="admin" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Password</label>
+                    <input type="password" id="login-password" value="admin123" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                </div>
+                <div class="bg-brand-navy/60 p-3 rounded-xl border border-brand-gold/30 text-[11px] text-brand-gold">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Demo Login: Username: <strong class="underline">admin</strong> / Pass: <strong class="underline">admin123</strong>
+                </div>
+                <button type="submit" class="w-full bg-brand-gold hover:bg-yellow-400 text-brand-navy font-black py-3 rounded-xl transition text-sm">
+                    Masuk ke Admin Panel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. ADD / EDIT PACKAGE FORM MODAL (ADMIN) -->
+    <div id="modal-package-form" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 id="pkg-modal-title" class="font-bold text-sm text-brand-gold">Tambah Paket Tour</h3>
+                <button onclick="closePackageFormModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <form onsubmit="savePackageForm(event)" class="p-6 overflow-y-auto space-y-4 text-xs flex-1">
+                <input type="hidden" id="form-pkg-id">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block font-bold text-slate-300 mb-1">Judul Paket Tour</label>
+                        <input type="text" id="form-pkg-title" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Tag Kategori Destinasi</label>
+                        <input type="text" id="form-pkg-dest" placeholder="Japan / Korea / Europe / Domestic" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Badge Highlight</label>
+                        <select id="form-pkg-badge" class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            <option value="PROMO BEST SELLER">PROMO BEST SELLER</option>
+                            <option value="EARLY BIRD">EARLY BIRD</option>
+                            <option value="SPECIAL WINTER">SPECIAL WINTER</option>
+                            <option value="SPRING BLOSSOM">SPRING BLOSSOM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Harga Normal (Rp)</label>
+                        <input type="text" id="form-pkg-price-normal" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Harga Promo / Final (Rp)</label>
+                        <input type="text" id="form-pkg-price-promo" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Durasi Hari</label>
+                        <input type="text" id="form-pkg-duration" placeholder="7D / 6N" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Jadwal Keberangkatan</label>
+                        <input type="text" id="form-pkg-date" placeholder="10, 18, 25 Nov 2026" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-bold text-slate-300 mb-1">URL Gambar Image</label>
+                        <input type="text" id="form-pkg-img" required class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Status Publikasi</label>
+                        <select id="form-pkg-status" class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            <option value="Active">Active (Tampil di Public)</option>
+                            <option value="Draft">Draft (Disembunyikan)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" onclick="closePackageFormModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-gold hover:bg-yellow-400 text-brand-navy font-extrabold rounded-xl">Simpan Paket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. PUBLIC BOOKING & CONSULTATION MODAL -->
+    <div id="modal-booking" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl relative text-slate-800">
+            <button onclick="closeBookingModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-lg">&times;</button>
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-2">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <h3 id="book-modal-title" class="font-extrabold text-base text-brand-navy">Konsultasi Paket Tour</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lengkapi formulir untuk terhubung langsung dengan Tim Angkasa Tour via WhatsApp.</p>
+            </div>
+            <form onsubmit="submitBookingWhatsApp(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="book-pkg-title">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="book-name" required placeholder="Contoh: Bpk. Budi Santoso" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Jumlah Peserta (Pax)</label>
+                    <input type="number" id="book-pax" min="1" value="2" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Rencana Bulan Berangkat</label>
+                    <input type="text" id="book-month" placeholder="Misal: November 2026" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl shadow transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Kirim Pesan via WhatsApp
+                </button>
+            </form>
         </div>
     </div>
 
 
-    <!-- JAVASCRIPT CMS LOGIC & STATE PERSISTENCE -->
+    <!-- ========================================================================= -->
+    <!-- JAVASCRIPT STATE ENGINE & EVENT HANDLERS                                 -->
+    <!-- ========================================================================= -->
     <script>
-        // DEFAULT INITIAL DATA STORE
-        const DEFAULT_PACKAGES = [
+        // DEFAULT INITIAL CMS DATA STORE
+        const INITIAL_PACKAGES = [
             {
-                id: 'pkg-1',
-                title: 'Japan Crimson Autumn & Fuji',
+                id: 'pkg-101',
+                title: 'Japan Crimson Autumn & Mount Fuji Symphony',
                 dest: 'Japan',
                 priceNormal: 'Rp 22.500.000',
                 pricePromo: 'Rp 18.990.000',
                 duration: '7D / 6N',
                 date: '10, 18, 25 Nov 2026',
                 img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80',
-                badge: 'PROMO BEST SELLER'
+                badge: 'PROMO BEST SELLER',
+                status: 'Active'
             },
             {
-                id: 'pkg-2',
-                title: 'Winter Wonderland Hokkaido & Tokyo',
+                id: 'pkg-102',
+                title: 'Winter Wonderland Hokkaido Ski & Snow Festival',
                 dest: 'Japan',
                 priceNormal: 'Rp 26.000.000',
                 pricePromo: 'Rp 22.800.000',
                 duration: '8D / 7N',
                 date: '15, 22, 28 Des 2026',
                 img: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=600&q=80',
-                badge: 'SPECIAL WINTER'
+                badge: 'SPECIAL WINTER',
+                status: 'Active'
             },
             {
-                id: 'pkg-3',
-                title: 'Korea Nami Island & Ski Resort',
+                id: 'pkg-103',
+                title: 'Korea Nami Island & Ski Resort Experience',
                 dest: 'Korea',
                 priceNormal: 'Rp 14.500.000',
                 pricePromo: 'Rp 11.900.000',
                 duration: '6D / 5N',
                 date: '05, 12, 19 Des 2026',
                 img: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=600&q=80',
-                badge: 'EARLY BIRD'
+                badge: 'EARLY BIRD',
+                status: 'Active'
             },
             {
-                id: 'pkg-4',
-                title: 'West Europe 5 Countries Delight',
+                id: 'pkg-104',
+                title: 'West Europe 5 Countries Delight Tour',
                 dest: 'Europe',
                 priceNormal: 'Rp 35.000.000',
                 pricePromo: 'Rp 29.900.000',
                 duration: '11D / 10N',
                 date: '20 Nov & 15 Des 2026',
                 img: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80',
-                badge: 'PROMO BEST SELLER'
+                badge: 'PROMO BEST SELLER',
+                status: 'Active'
             }
         ];
 
-        // Global State Variables
-        let isCmsActive = false;
-        let packageState = [];
-        let cmsTextState = {};
+        const INITIAL_DESTINATIONS = [
+            { name: 'Jepang', tag: 'Japan', subtitle: 'Cherry Blossom & Snow', img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=500&q=80' },
+            { name: 'Korea Selatan', tag: 'Korea', subtitle: 'Seoul & Nami Island', img: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=500&q=80' },
+            { name: 'Eropa', tag: 'Europe', subtitle: 'Paris, Swiss, Italia', img: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=500&q=80' },
+            { name: 'China', tag: 'China', subtitle: 'Great Wall & Zhangjiajie', img: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=500&q=80' },
+            { name: 'Vietnam', tag: 'Vietnam', subtitle: 'Hanoi & Ba Na Hills', img: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=500&q=80' },
+            { name: 'Bali & Domestik', tag: 'Domestic', subtitle: 'Eksotis Nusantara', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=500&q=80' }
+        ];
 
-        // INITIALIZATION ON LOAD
+        const INITIAL_TESTIMONIALS = [
+            { quote: "Liburan keluarga ke Jepang bersama Angkasa Tour luar biasa menyenangkan! Tour Leader ramah, hotel sangat bersih & dekat stasiun.", author: "Bpk. Hendra S.", role: "Peserta Autumn Japan Tour 2025" },
+            { quote: "Pengurusan Visa Schengen sangat cepat dan tanpa kendala. Sukses terus untuk tim Angkasa Tour!", author: "Ibu Ratna Dewi", role: "Pelanggan Visa & Tour Europe" }
+        ];
+
+        const INITIAL_SITE_CONTENT = {
+            heroTitle: "Jelajahi Keindahan Dunia Bersama Angkasa Tour",
+            heroSubtitle: "Layanan Paket Wisata Domestik & Internasional Terpercaya, Visa, Tiket Pesawat, serta Cruise dengan Pengalaman Lebih Dari 20 Tahun.",
+            heroBg: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1920&q=80",
+            phoneWA: "+62 811 600 8888",
+            email: "sales@angkasatour.co.id",
+            addrMedan: "Jl. Brigjen Katamso No. 123, Medan, Sumatera Utara",
+            addrJkt: "Ruko Mangga Dua Square, Jakarta Utara"
+        };
+
+        // APPLICATION STATE
+        let appState = {
+            isAdminLoggedIn: false,
+            currentView: 'public', // 'public' | 'admin'
+            packages: [],
+            destinations: [],
+            testimonials: [],
+            siteContent: {}
+        };
+
+        // ON LOAD INITIALIZER
         window.onload = function() {
-            loadStateFromLocalStorage();
-            renderPackages('all');
-            setupInlineCMSListeners();
+            loadAppStateFromStorage();
+            renderPublicView();
+            renderAdminView();
+        };
+
+        // LOCALSTORAGE PERSISTENCE
+        function loadAppStateFromStorage() {
+            const savedPackages = localStorage.getItem('angkasa_cms_packages');
+            appState.packages = savedPackages ? JSON.parse(savedPackages) : [...INITIAL_PACKAGES];
+
+            const savedDest = localStorage.getItem('angkasa_cms_destinations');
+            appState.destinations = savedDest ? JSON.parse(savedDest) : [...INITIAL_DESTINATIONS];
+
+            const savedTesti = localStorage.getItem('angkasa_cms_testimonials');
+            appState.testimonials = savedTesti ? JSON.parse(savedTesti) : [...INITIAL_TESTIMONIALS];
+
+            const savedContent = localStorage.getItem('angkasa_cms_content');
+            appState.siteContent = savedContent ? JSON.parse(savedContent) : { ...INITIAL_SITE_CONTENT };
+
+            const savedAuth = localStorage.getItem('angkasa_cms_auth');
+            appState.isAdminLoggedIn = savedAuth === 'true';
         }
 
-        // LOAD DATA FROM LOCAL STORAGE OR USE DEFAULTS
-        function loadStateFromLocalStorage() {
-            const savedPackages = localStorage.getItem('angkasa_tour_packages');
-            if (savedPackages) {
-                try { packageState = JSON.parse(savedPackages); } catch(e) { packageState = DEFAULT_PACKAGES; }
-            } else {
-                packageState = [...DEFAULT_PACKAGES];
-            }
-
-            const savedText = localStorage.getItem('angkasa_tour_text_cms');
-            if (savedText) {
-                try {
-                    cmsTextState = JSON.parse(savedText);
-                    applyCmsTextToDOM();
-                } catch(e) { console.error('Failed parsing text state', e); }
-            }
+        function saveAppStateToStorage() {
+            localStorage.setItem('angkasa_cms_packages', JSON.stringify(appState.packages));
+            localStorage.setItem('angkasa_cms_destinations', JSON.stringify(appState.destinations));
+            localStorage.setItem('angkasa_cms_testimonials', JSON.stringify(appState.testimonials));
+            localStorage.setItem('angkasa_cms_content', JSON.stringify(appState.siteContent));
+            localStorage.setItem('angkasa_cms_auth', appState.isAdminLoggedIn ? 'true' : 'false');
         }
 
-        // APPLY SAVED TEXT CONTENT TO DATA-CMS-KEY ELEMENTS
-        function applyCmsTextToDOM() {
-            Object.keys(cmsTextState).forEach(key => {
-                const el = document.querySelector(`[data-cms-key="${key}"]`);
-                if (el) {
-                    el.innerText = cmsTextState[key];
+        // NAVIGATION VIEW SWITCHING (PUBLIC VS ADMIN)
+        function switchView(viewName) {
+            const pubView = document.getElementById('view-public');
+            const admView = document.getElementById('view-admin');
+            const badge = document.getElementById('current-view-badge');
+
+            if (viewName === 'admin') {
+                if (!appState.isAdminLoggedIn) {
+                    openAdminLoginModal();
+                    return;
                 }
+                pubView.classList.add('hidden');
+                admView.classList.remove('hidden');
+                badge.innerText = "● PROTECTED ADMIN PANEL CMS";
+                badge.className = "bg-brand-gold/20 text-brand-gold border border-brand-gold/40 text-[10px] px-2 py-0.5 rounded-full font-bold";
+                appState.currentView = 'admin';
+                renderAdminView();
+            } else {
+                pubView.classList.remove('hidden');
+                admView.classList.add('hidden');
+                badge.innerText = "● PUBLIC VISITOR LIVE VIEW";
+                badge.className = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full font-bold";
+                appState.currentView = 'public';
+                renderPublicView();
+            }
+        }
+
+        function handleAdminPanelClick() {
+            if (appState.isAdminLoggedIn) {
+                switchView('admin');
+            } else {
+                openAdminLoginModal();
+            }
+        }
+
+        // AUTHENTICATION LOGIC
+        function openAdminLoginModal() {
+            document.getElementById('modal-admin-login').classList.remove('hidden');
+        }
+
+        function closeAdminLoginModal() {
+            document.getElementById('modal-admin-login').classList.add('hidden');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value;
+            const p = document.getElementById('login-password').value;
+
+            if (u === 'admin' && p === 'admin123') {
+                appState.isAdminLoggedIn = true;
+                saveAppStateToStorage();
+                closeAdminLoginModal();
+                document.getElementById('logged-in-admin-indicator').classList.remove('hidden');
+                switchView('admin');
+                showToast("Berhasil login sebagai Administrator CMS!");
+            } else {
+                showToast("Username / Password salah!", true);
+            }
+        }
+
+        function logoutAdmin() {
+            appState.isAdminLoggedIn = false;
+            saveAppStateToStorage();
+            document.getElementById('logged-in-admin-indicator').classList.add('hidden');
+            switchView('public');
+            showToast("Anda telah keluar dari Admin CMS.");
+        }
+
+        // RENDER PUBLIC VIEW COMPONENTS
+        function renderPublicView() {
+            const content = appState.siteContent;
+            document.getElementById('pub-hero-title').innerText = content.heroTitle;
+            document.getElementById('pub-hero-subtitle').innerText = content.heroSubtitle;
+            document.getElementById('pub-hero-bg').src = content.heroBg;
+            document.getElementById('pub-phone').innerText = content.phoneWA;
+            document.getElementById('pub-email').innerText = content.email;
+            document.getElementById('pub-addr-medan').innerText = content.addrMedan;
+            document.getElementById('pub-addr-jkt').innerText = content.addrJkt;
+            document.getElementById('pub-footer-phone').innerText = content.phoneWA;
+            document.getElementById('pub-footer-wa').innerText = content.phoneWA;
+            document.getElementById('pub-footer-email').innerText = content.email;
+
+            renderPublicDestinations();
+            renderPublicPackages('all');
+            renderPublicTestimonials();
+        }
+
+        function renderPublicDestinations() {
+            const grid = document.getElementById('destinations-grid');
+            grid.innerHTML = '';
+            appState.destinations.forEach(d => {
+                const el = document.createElement('div');
+                el.onclick = () => renderPublicPackages(d.tag);
+                el.className = 'group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl cursor-pointer card-hover h-52';
+                el.innerHTML = `
+                    <img src="${d.img}" alt="${d.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-3 left-3 right-3 text-white">
+                        <h3 class="font-bold text-sm leading-tight">${d.name}</h3>
+                        <p class="text-[10px] text-slate-300 mt-0.5">${d.subtitle}</p>
+                    </div>
+                `;
+                grid.appendChild(el);
             });
         }
 
-        // TOGGLE CMS ADMIN MODE SWITCH
-        function toggleCmsMode() {
-            isCmsActive = document.getElementById('cms-toggle-switch').checked;
-            const body = document.body;
-            const cmsActions = document.getElementById('cms-actions');
-            const cmsStatusLabel = document.getElementById('cms-status-label');
-            const cmsOnlyElements = document.querySelectorAll('.cms-only');
-
-            if (isCmsActive) {
-                body.classList.add('cms-active');
-                cmsActions.classList.remove('hidden');
-                cmsStatusLabel.innerText = "CMS EDIT MODE: ON";
-                cmsStatusLabel.classList.replace('text-brand-gold', 'text-emerald-400');
-                cmsOnlyElements.forEach(el => el.classList.remove('hidden'));
-
-                // Enable contenteditable on all registered keys
-                document.querySelectorAll('[data-cms-key]').forEach(el => {
-                    el.setAttribute('contenteditable', 'true');
-                });
-            } else {
-                body.classList.remove('cms-active');
-                cmsActions.classList.add('hidden');
-                cmsStatusLabel.innerText = "CMS EDIT MODE: OFF";
-                cmsStatusLabel.classList.replace('text-emerald-400', 'text-brand-gold');
-                cmsOnlyElements.forEach(el => el.classList.add('hidden'));
-
-                // Disable contenteditable
-                document.querySelectorAll('[data-cms-key]').forEach(el => {
-                    el.removeAttribute('contenteditable');
-                });
-
-                // Auto save changes when toggling off
-                saveAllInlineEdits();
-            }
-        }
-
-        // LISTEN FOR TEXT EDITS & AUTO BIND TO STATE
-        function setupInlineCMSListeners() {
-            document.addEventListener('blur', function(e) {
-                if (isCmsActive && e.target.hasAttribute('data-cms-key')) {
-                    const key = e.target.getAttribute('data-cms-key');
-                    cmsTextState[key] = e.target.innerText.trim();
-                    localStorage.setItem('angkasa_tour_text_cms', JSON.stringify(cmsTextState));
-                }
-            }, true);
-        }
-
-        // MANUAL SAVE ALL INLINE EDITS BUTTON
-        function saveAllInlineEdits() {
-            document.querySelectorAll('[data-cms-key]').forEach(el => {
-                const key = el.getAttribute('data-cms-key');
-                cmsTextState[key] = el.innerText.trim();
-            });
-            localStorage.setItem('angkasa_tour_text_cms', JSON.stringify(cmsTextState));
-            showToast('Semua teks & perubahan berhasil disimpan ke LocalStorage!');
-        }
-
-        // RENDER PACKAGES TO DYNAMIC GRID
-        function renderPackages(filter = 'all') {
-            const grid = document.getElementById('tour-packages-grid');
+        function renderPublicPackages(filterTag = 'all') {
+            const grid = document.getElementById('public-packages-grid');
             grid.innerHTML = '';
 
-            let filtered = packageState;
-            if (filter !== 'all') {
-                if (filter === 'Promo') {
-                    filtered = packageState.filter(p => p.badge.includes('PROMO') || p.badge.includes('EARLY'));
-                } else if (filter === 'International') {
-                    filtered = packageState.filter(p => p.dest !== 'Bali');
+            // Filter active packages only for public view
+            let activePkgs = appState.packages.filter(p => p.status === 'Active');
+
+            if (filterTag !== 'all') {
+                if (filterTag === 'Promo') {
+                    activePkgs = activePkgs.filter(p => p.badge.includes('PROMO') || p.badge.includes('EARLY'));
                 } else {
-                    filtered = packageState.filter(p => p.dest.toLowerCase().includes(filter.toLowerCase()));
+                    activePkgs = activePkgs.filter(p => p.dest.toLowerCase().includes(filterTag.toLowerCase()));
                 }
             }
 
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500">Tidak ada paket wisata ditemukan untuk kategori ini.</div>`;
+            if (activePkgs.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-500 text-sm">Tidak ada paket wisata aktif ditemukan untuk filter ini.</div>`;
                 return;
             }
 
-            filtered.forEach(pkg => {
+            activePkgs.forEach(p => {
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-gray-100 flex flex-col justify-between card-hover relative group';
+                card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-slate-100 flex flex-col justify-between card-hover group';
                 card.innerHTML = `
                     <div>
-                        <!-- Image Container -->
-                        <div class="h-48 relative overflow-hidden bg-gray-100">
-                            <img src="${pkg.img}" alt="${pkg.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                            <span class="absolute top-3 left-3 bg-brand-gold text-brand-navy font-black text-[10px] px-2.5 py-1 rounded-md shadow-md uppercase tracking-wider">
-                                ${pkg.badge}
+                        <div class="h-44 relative overflow-hidden bg-slate-100">
+                            <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <span class="absolute top-3 left-3 bg-brand-gold text-brand-navy font-black text-[9px] px-2 py-0.5 rounded shadow uppercase">
+                                ${p.badge}
                             </span>
-                            <span class="absolute bottom-3 right-3 bg-brand-navy/80 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-1 rounded-md">
-                                <i class="fa-solid fa-clock text-brand-gold mr-1"></i>${pkg.duration}
+                            <span class="absolute bottom-3 right-3 bg-brand-navy/80 text-white text-[10px] font-semibold px-2 py-0.5 rounded">
+                                <i class="fa-solid fa-clock text-brand-gold mr-1"></i>${p.duration}
                             </span>
                         </div>
-
-                        <!-- Card Content -->
-                        <div class="p-5">
-                            <div class="text-xs text-brand-blue font-bold uppercase mb-1 flex items-center gap-1">
-                                <i class="fa-solid fa-location-dot"></i> ${pkg.dest}
-                            </div>
-                            <h3 class="font-extrabold text-brand-navy text-base leading-snug mb-2 line-clamp-2">${pkg.title}</h3>
-                            <div class="text-xs text-gray-500 mb-4 flex items-center gap-1">
-                                <i class="fa-solid fa-calendar-days text-gray-400"></i> ${pkg.date}
-                            </div>
+                        <div class="p-4">
+                            <div class="text-[10px] text-brand-blue font-bold uppercase mb-1"><i class="fa-solid fa-location-dot"></i> ${p.dest}</div>
+                            <h3 class="font-extrabold text-brand-navy text-sm leading-snug mb-2 line-clamp-2">${p.title}</h3>
+                            <div class="text-[11px] text-slate-500 mb-3"><i class="fa-solid fa-calendar-days text-slate-400 mr-1"></i> ${p.date}</div>
                         </div>
                     </div>
-
-                    <!-- Card Footer / Price -->
-                    <div class="px-5 pb-5 pt-0 border-t border-gray-50 flex items-center justify-between">
+                    <div class="p-4 pt-0 border-t border-slate-50 flex items-center justify-between">
                         <div>
-                            <div class="text-[10px] text-gray-400 line-through">${pkg.priceNormal}</div>
-                            <div class="text-base font-black text-brand-blue">${pkg.pricePromo}</div>
+                            <div class="text-[10px] text-slate-400 line-through">${p.priceNormal}</div>
+                            <div class="text-sm font-black text-brand-blue">${p.pricePromo}</div>
                         </div>
-                        <button onclick="openPackageDetailModal('${pkg.id}')" class="bg-brand-navy hover:bg-brand-blue text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow">
-                            Detail
+                        <button onclick="openBookingModal('${p.title}')" class="bg-brand-navy hover:bg-brand-blue text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition">
+                            Pesan
                         </button>
                     </div>
                 `;
@@ -991,226 +972,305 @@
             });
         }
 
-        // FILTER SEARCH BAR LOGIC
-        function filterPackages() {
-            const destInput = document.getElementById('search-destination').value;
-            renderPackages(destInput || 'all');
+        function renderPublicTestimonials() {
+            const grid = document.getElementById('public-testimonials-grid');
+            grid.innerHTML = '';
+            appState.testimonials.forEach(t => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800/60 p-6 rounded-2xl border border-slate-700 relative';
+                card.innerHTML = `
+                    <div class="flex text-brand-gold text-xs gap-1 mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-slate-300 italic text-xs leading-relaxed mb-4">"${t.quote}"</p>
+                    <div>
+                        <div class="font-bold text-white text-xs">${t.author}</div>
+                        <div class="text-[10px] text-brand-gold mt-0.5">${t.role}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function applyPublicFilter() {
+            const text = document.getElementById('public-search-dest').value;
+            const cat = document.getElementById('public-filter-cat').value;
+            renderPublicPackages(text || cat);
             document.getElementById('packages').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function filterByDestination(destName) {
-            renderPackages(destName);
-            document.getElementById('packages').scrollIntoView({ behavior: 'smooth' });
+
+        // RENDER ADMIN VIEW COMPONENTS
+        function renderAdminView() {
+            // Stats
+            document.getElementById('stat-total-pkg').innerText = appState.packages.length;
+            document.getElementById('stat-active-pkg').innerText = appState.packages.filter(p => p.status === 'Active').length;
+            document.getElementById('stat-dest-count').innerText = appState.destinations.length;
+
+            renderAdminPackagesTable();
+            fillSiteContentForm();
+            renderAdminDestinations();
+            renderAdminTestimonials();
         }
 
-        // SEARCH TAB SWITCHER
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.search-tab-btn').forEach(btn => {
-                btn.classList.remove('text-brand-blue', 'border-b-2', 'border-brand-blue');
-                btn.classList.add('text-gray-500');
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.adm-tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.adm-tab-btn').forEach(btn => {
+                btn.classList.remove('text-brand-gold', 'bg-brand-navy', 'font-bold');
+                btn.classList.add('text-slate-400');
             });
 
             document.getElementById(tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById('btn-' + tabId);
-            activeBtn.classList.add('text-brand-blue', 'border-b-2', 'border-brand-blue');
-            activeBtn.classList.remove('text-gray-500');
+            const navBtn = document.getElementById('adm-nav-' + tabId.replace('tab-', ''));
+            if (navBtn) {
+                navBtn.classList.add('text-brand-gold', 'bg-brand-navy', 'font-bold');
+                navBtn.classList.remove('text-slate-400');
+            }
         }
 
-        // PACKAGE MANAGEMENT MODAL LOGIC (CMS)
-        function openManagePackagesModal() {
-            renderCMSPackagesTable();
-            document.getElementById('modal-manage-packages').classList.remove('hidden');
-        }
-
-        function closeManagePackagesModal() {
-            document.getElementById('modal-manage-packages').classList.add('hidden');
-            document.getElementById('pkg-form').reset();
-            document.getElementById('pkg-id').value = '';
-        }
-
-        function renderCMSPackagesTable() {
-            const tbody = document.getElementById('cms-packages-table-body');
+        function renderAdminPackagesTable() {
+            const tbody = document.getElementById('adm-packages-table');
             tbody.innerHTML = '';
 
-            packageState.forEach(pkg => {
+            appState.packages.forEach(p => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
+                tr.className = 'hover:bg-slate-800/40 border-b border-slate-700/50';
                 tr.innerHTML = `
-                    <td class="p-2.5">
-                        <img src="${pkg.img}" class="w-10 h-10 rounded object-cover">
+                    <td class="p-3.5"><img src="${p.img}" class="w-10 h-10 rounded object-cover"></td>
+                    <td class="p-3.5 font-bold text-white">${p.title}</td>
+                    <td class="p-3.5"><span class="bg-slate-700 px-2 py-0.5 rounded text-[10px]">${p.dest}</span></td>
+                    <td class="p-3.5 line-through text-slate-500">${p.priceNormal}</td>
+                    <td class="p-3.5 text-brand-gold font-bold">${p.pricePromo}</td>
+                    <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${p.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
+                            ${p.status}
+                        </span>
                     </td>
-                    <td class="p-2.5 font-bold text-gray-800">${pkg.title}</td>
-                    <td class="p-2.5 text-brand-blue font-semibold">${pkg.pricePromo}</td>
-                    <td class="p-2.5">${pkg.dest}</td>
-                    <td class="p-2.5 text-right space-x-1">
-                        <button onclick="editPackageItem('${pkg.id}')" class="bg-amber-500 text-white px-2 py-1 rounded text-[10px] font-bold">Edit</button>
-                        <button onclick="deletePackageItem('${pkg.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold">Hapus</button>
+                    <td class="p-3.5 text-right space-x-1">
+                        <button onclick="editPackageModal('${p.id}')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-2 py-1 rounded text-[10px]">Edit</button>
+                        <button onclick="deletePackage('${p.id}')" class="bg-red-600/80 hover:bg-red-600 text-white font-bold px-2 py-1 rounded text-[10px]">Hapus</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function handleSavePackageForm(e) {
+        // ADMIN PACKAGE FORM MODAL
+        function openPackageFormModal() {
+            document.getElementById('pkg-modal-title').innerText = "Tambah Paket Tour Baru";
+            document.getElementById('form-pkg-id').value = '';
+            document.getElementById('form-pkg-title').value = '';
+            document.getElementById('form-pkg-dest').value = '';
+            document.getElementById('form-pkg-price-normal').value = '';
+            document.getElementById('form-pkg-price-promo').value = '';
+            document.getElementById('form-pkg-duration').value = '';
+            document.getElementById('form-pkg-date').value = '';
+            document.getElementById('form-pkg-img').value = '';
+            document.getElementById('modal-package-form').classList.remove('hidden');
+        }
+
+        function closePackageFormModal() {
+            document.getElementById('modal-package-form').classList.add('hidden');
+        }
+
+        function editPackageModal(id) {
+            const p = appState.packages.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('pkg-modal-title').innerText = "Edit Data Paket Tour";
+            document.getElementById('form-pkg-id').value = p.id;
+            document.getElementById('form-pkg-title').value = p.title;
+            document.getElementById('form-pkg-dest').value = p.dest;
+            document.getElementById('form-pkg-badge').value = p.badge;
+            document.getElementById('form-pkg-price-normal').value = p.priceNormal;
+            document.getElementById('form-pkg-price-promo').value = p.pricePromo;
+            document.getElementById('form-pkg-duration').value = p.duration;
+            document.getElementById('form-pkg-date').value = p.date;
+            document.getElementById('form-pkg-img').value = p.img;
+            document.getElementById('form-pkg-status').value = p.status;
+            document.getElementById('modal-package-form').classList.remove('hidden');
+        }
+
+        function savePackageForm(e) {
             e.preventDefault();
-            const id = document.getElementById('pkg-id').value || 'pkg-' + Date.now();
-            const title = document.getElementById('pkg-title').value;
-            const dest = document.getElementById('pkg-dest').value;
-            const priceNormal = document.getElementById('pkg-price-normal').value;
-            const pricePromo = document.getElementById('pkg-price-promo').value;
-            const duration = document.getElementById('pkg-duration').value;
-            const date = document.getElementById('pkg-date').value;
-            const img = document.getElementById('pkg-img').value;
-            const badge = document.getElementById('pkg-badge').value;
-
-            const existingIdx = packageState.findIndex(p => p.id === id);
-            const packageObj = { id, title, dest, priceNormal, pricePromo, duration, date, img, badge };
-
-            if (existingIdx >= 0) {
-                packageState[existingIdx] = packageObj;
-            } else {
-                packageState.unshift(packageObj);
-            }
-
-            localStorage.setItem('angkasa_tour_packages', JSON.stringify(packageState));
-            renderCMSPackagesTable();
-            renderPackages('all');
-            document.getElementById('pkg-form').reset();
-            document.getElementById('pkg-id').value = '';
-            showToast('Paket tour berhasil disimpan!');
-        }
-
-        function editPackageItem(id) {
-            const item = packageState.find(p => p.id === id);
-            if (!item) return;
-
-            document.getElementById('pkg-id').value = item.id;
-            document.getElementById('pkg-title').value = item.title;
-            document.getElementById('pkg-dest').value = item.dest;
-            document.getElementById('pkg-price-normal').value = item.priceNormal;
-            document.getElementById('pkg-price-promo').value = item.pricePromo;
-            document.getElementById('pkg-duration').value = item.duration;
-            document.getElementById('pkg-date').value = item.date;
-            document.getElementById('pkg-img').value = item.img;
-            document.getElementById('pkg-badge').value = item.badge;
-        }
-
-        function deletePackageItem(id) {
-            packageState = packageState.filter(p => p.id !== id);
-            localStorage.setItem('angkasa_tour_packages', JSON.stringify(packageState));
-            renderCMSPackagesTable();
-            renderPackages('all');
-            showToast('Paket tour telah dihapus.');
-        }
-
-        // CHANGE HERO IMAGE PROMPT
-        function promptHeroImageChange() {
-            const currentImg = document.getElementById('hero-bg-img').src;
-            const newUrl = prompt("Masukkan URL Gambar Banner Baru:", currentImg);
-            if (newUrl) {
-                document.getElementById('hero-bg-img').src = newUrl;
-                cmsTextState['hero_bg_image'] = newUrl;
-                localStorage.setItem('angkasa_tour_text_cms', JSON.stringify(cmsTextState));
-                showToast("Background hero berhasil diperbarui!");
-            }
-        }
-
-        // PUBLIC PACKAGE DETAIL MODAL & WA FORM LINK
-        function openPackageDetailModal(id) {
-            const pkg = packageState.find(p => p.id === id);
-            if (!pkg) return;
-
-            document.getElementById('detail-img').src = pkg.img;
-            document.getElementById('detail-badge').innerText = pkg.badge;
-            document.getElementById('detail-title').innerText = pkg.title;
-            document.getElementById('detail-price').innerText = pkg.pricePromo;
-            document.getElementById('detail-duration').innerText = pkg.duration;
-            document.getElementById('detail-date').innerText = pkg.date;
-
-            const waText = encodeURIComponent(`Halo Angkasa Tour, saya tertarik dan ingin konsultasi tentang paket tour: ${pkg.title} (${pkg.pricePromo})`);
-            document.getElementById('detail-wa-btn').href = `https://wa.me/628116008888?text=${waText}`;
-
-            document.getElementById('modal-package-detail').classList.remove('hidden');
-        }
-
-        function closePackageDetailModal() {
-            document.getElementById('modal-package-detail').classList.add('hidden');
-        }
-
-        // EXPORT & IMPORT CONFIG JSON
-        function exportDataJSON() {
-            const exportData = {
-                textCMS: cmsTextState,
-                packages: packageState,
-                exportDate: new Date().toISOString()
+            const id = document.getElementById('form-pkg-id').value || 'pkg-' + Date.now();
+            const pkgObj = {
+                id,
+                title: document.getElementById('form-pkg-title').value,
+                dest: document.getElementById('form-pkg-dest').value,
+                badge: document.getElementById('form-pkg-badge').value,
+                priceNormal: document.getElementById('form-pkg-price-normal').value,
+                pricePromo: document.getElementById('form-pkg-price-promo').value,
+                duration: document.getElementById('form-pkg-duration').value,
+                date: document.getElementById('form-pkg-date').value,
+                img: document.getElementById('form-pkg-img').value,
+                status: document.getElementById('form-pkg-status').value
             };
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `angkasa_tour_cms_backup.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const idx = appState.packages.findIndex(x => x.id === id);
+            if (idx >= 0) {
+                appState.packages[idx] = pkgObj;
+            } else {
+                appState.packages.unshift(pkgObj);
+            }
+
+            saveAppStateToStorage();
+            closePackageFormModal();
+            renderAdminView();
+            showToast("Data Paket Tour berhasil disimpan!");
         }
 
-        function importDataJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+        function deletePackage(id) {
+            if (confirm("Hapus paket tour ini?")) {
+                appState.packages = appState.packages.filter(x => x.id !== id);
+                saveAppStateToStorage();
+                renderAdminView();
+                showToast("Paket tour dihapus.");
+            }
+        }
 
+        // SITE CONTENT FORM HANDLER
+        function fillSiteContentForm() {
+            const c = appState.siteContent;
+            document.getElementById('adm-form-hero-title').value = c.heroTitle || '';
+            document.getElementById('adm-form-hero-subtitle').value = c.heroSubtitle || '';
+            document.getElementById('adm-form-hero-bg').value = c.heroBg || '';
+            document.getElementById('adm-form-phone-wa').value = c.phoneWA || '';
+            document.getElementById('adm-form-email').value = c.email || '';
+            document.getElementById('adm-form-addr-medan').value = c.addrMedan || '';
+            document.getElementById('adm-form-addr-jkt').value = c.addrJkt || '';
+        }
+
+        function saveSiteContentForm(e) {
+            e.preventDefault();
+            appState.siteContent = {
+                heroTitle: document.getElementById('adm-form-hero-title').value,
+                heroSubtitle: document.getElementById('adm-form-hero-subtitle').value,
+                heroBg: document.getElementById('adm-form-hero-bg').value,
+                phoneWA: document.getElementById('adm-form-phone-wa').value,
+                email: document.getElementById('adm-form-email').value,
+                addrMedan: document.getElementById('adm-form-addr-medan').value,
+                addrJkt: document.getElementById('adm-form-addr-jkt').value
+            };
+            saveAppStateToStorage();
+            showToast("Informasi konten website diperbarui!");
+        }
+
+        // DESTINATIONS & TESTIMONIALS ADMIN
+        function renderAdminDestinations() {
+            const container = document.getElementById('adm-destinations-list');
+            container.innerHTML = '';
+            appState.destinations.forEach((d, idx) => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-800/80 p-4 rounded-xl border border-slate-700/60 text-xs space-y-2';
+                div.innerHTML = `
+                    <div class="font-bold text-brand-gold">Destinasi #${idx+1}</div>
+                    <input type="text" value="${d.name}" onchange="updateDest(${idx}, 'name', this.value)" class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-white">
+                    <input type="text" value="${d.subtitle}" onchange="updateDest(${idx}, 'subtitle', this.value)" class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-white">
+                    <input type="text" value="${d.img}" onchange="updateDest(${idx}, 'img', this.value)" class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-white">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateDest(idx, field, val) {
+            appState.destinations[idx][field] = val;
+            saveAppStateToStorage();
+            showToast("Destinasi diperbarui!");
+        }
+
+        function renderAdminTestimonials() {
+            const container = document.getElementById('adm-testimonials-list');
+            container.innerHTML = '';
+            appState.testimonials.forEach((t, idx) => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-800/80 p-4 rounded-xl border border-slate-700/60 text-xs space-y-2';
+                div.innerHTML = `
+                    <textarea onchange="updateTesti(${idx}, 'quote', this.value)" rows="2" class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-white">${t.quote}</textarea>
+                    <input type="text" value="${t.author}" onchange="updateTesti(${idx}, 'author', this.value)" class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-white">
+                    <input type="text" value="${t.role}" onchange="updateTesti(${idx}, 'role', this.value)" class="w-full p-2 bg-slate-900 border border-slate-700 rounded text-white">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateTesti(idx, field, val) {
+            appState.testimonials[idx][field] = val;
+            saveAppStateToStorage();
+            showToast("Testimoni diperbarui!");
+        }
+
+        // BOOKING WHATSAPP DRAWER
+        function openBookingModal(pkgTitle) {
+            document.getElementById('book-pkg-title').value = pkgTitle;
+            document.getElementById('book-modal-title').innerText = `Konsultasi: ${pkgTitle}`;
+            document.getElementById('modal-booking').classList.remove('hidden');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('modal-booking').classList.add('hidden');
+        }
+
+        function submitBookingWhatsApp(e) {
+            e.preventDefault();
+            const pkg = document.getElementById('book-pkg-title').value;
+            const name = document.getElementById('book-name').value;
+            const pax = document.getElementById('book-pax').value;
+            const month = document.getElementById('book-month').value;
+
+            const text = encodeURIComponent(`Halo Angkasa Tour,\nSaya ingin menanyakan detail paket tour:\n- *Paket*: ${pkg}\n- *Nama*: ${name}\n- *Jumlah*: ${pax} Pax\n- *Rencana*: ${month}`);
+            const waNumber = appState.siteContent.phoneWA.replace(/[^0-9]/g, '');
+
+            window.open(`https://wa.me/${waNumber}?text=${text}`, '_blank');
+            closeBookingModal();
+        }
+
+        // BACKUP & RESTORE JSON
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", `angkasa_tour_backup_${Date.now()}.json`);
+            dl.click();
+            dl.remove();
+        }
+
+        function importDataJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function(evt) {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    if (imported.packages) {
-                        packageState = imported.packages;
-                        localStorage.setItem('angkasa_tour_packages', JSON.stringify(packageState));
-                    }
-                    if (imported.textCMS) {
-                        cmsTextState = imported.textCMS;
-                        localStorage.setItem('angkasa_tour_text_cms', JSON.stringify(cmsTextState));
-                        applyCmsTextToDOM();
-                    }
-                    renderPackages('all');
-                    showToast('Data Config JSON berhasil diimport!');
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed.packages) appState.packages = parsed.packages;
+                    if (parsed.siteContent) appState.siteContent = parsed.siteContent;
+                    saveAppStateToStorage();
+                    renderAdminView();
+                    showToast("Database CMS berhasil diimport!");
                 } catch(err) {
-                    showToast('Gagal membaca file JSON!', true);
+                    showToast("Format JSON tidak valid!", true);
                 }
             };
             reader.readAsText(file);
         }
 
-        // RESET DEFAULT DATA
         function resetDefaultData() {
-            if (confirm("Apakah Anda yakin ingin meriset seluruh teks & paket kembali ke tampilan awal mula?")) {
-                localStorage.removeItem('angkasa_tour_packages');
-                localStorage.removeItem('angkasa_tour_text_cms');
-                location.reload();
+            if (confirm("Kembalikan seluruh data ke kondisi awal mula?")) {
+                localStorage.clear();
+                loadAppStateFromStorage();
+                renderAdminView();
+                showToast("System di-reset ke data default.");
             }
         }
 
-        // MOBILE MENU TOGGLE
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            menu.classList.toggle('hidden');
+        function toggleMobileNav() {
+            document.getElementById('mobile-nav').classList.toggle('hidden');
         }
 
-        // UTILITY TOAST NOTIFICATION
-        function showToast(message, isError = false) {
+        function showToast(msg, isError = false) {
             const toast = document.createElement('div');
-            toast.className = `fixed top-5 right-5 z-50 ${isError ? 'bg-red-600' : 'bg-brand-navy'} text-white px-5 py-3 rounded-xl shadow-2xl border border-brand-gold text-xs font-bold flex items-center gap-2 transform transition-all duration-300 translate-y-[-20px] opacity-0`;
-            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-triangle-exclamation text-red-300' : 'fa-circle-check text-brand-gold'}"></i> ${message}`;
-            
+            toast.className = `fixed bottom-5 right-5 z-50 ${isError ? 'bg-red-600' : 'bg-brand-navy'} text-white px-4 py-3 rounded-xl shadow-2xl border border-brand-gold text-xs font-bold flex items-center gap-2 transition`;
+            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check text-brand-gold'}"></i> ${msg}`;
             document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
-            }, 50);
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => toast.remove(), 3000);
         }
     </script>
 </body>
